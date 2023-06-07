@@ -1,0 +1,28 @@
+#pnpt bash script by tcm and sumrecon
+
+#!/bin/env bash
+
+url=$1
+
+if [ ! -d "$url" ];then
+	mkdir $url
+fi
+
+if [ ! -d "url" ];then
+	mkdir $url/recon
+fi
+
+echo "[+] Harvesting subdomains with assetfinder..."
+assetfinder $url >> $url/recon/assets.txt
+
+cat $url/recon/assets.txt | grep $1 >> $url/recon/final.txt
+
+rm $url/recon/assets.txt
+
+echo "[+] Harvesting subs with amass..."
+amass enum -d $url >> $url/recon/f.txt
+sort -u $url/recon/f.txt >> $url/recon/final.txt
+rm $url/recon/f.txt
+
+echo "Probing to see if domains are alive..."
+cat $url/recon/final.txt | sort -u | httprobe -s -p https:443 | sed 's/https\?:\/\///' | tr -d ':443' >> $url/recon/alive.txt
